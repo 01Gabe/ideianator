@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Banco de Ideias — Cinema, Arte e Arquitetura</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EAE7E0; --paper-dim:#DFDBD2; --ink:#1D1B17; --ink-soft:#605B51;
+    --card:#F5F3EE; --signal:#B23A1F; --line:#C9C4B8;
+    --cinema-bg:#E2EAF2; --cinema-fg:#1E3A5F;
+    --arq-bg:#EFE6D6; --arq-fg:#6B4A2B;
+    --arte-bg:#F2E1E6; --arte-fg:#7A2E45;
+    --cruz-bg:#E3EBDD; --cruz-fg:#3D5C33;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased;}
+  .app{display:grid; grid-template-columns:220px 1fr; min-height:100vh;}
+  @media (max-width:760px){ .app{grid-template-columns:1fr;} .nav{flex-direction:row; overflow-x:auto; height:auto;} }
+
+  .nav{background:var(--ink); color:var(--paper); display:flex; flex-direction:column; padding:28px 0; gap:2px; position:sticky; top:0; align-self:start; height:100vh;}
+  .nav-title{font-family:'Fraunces',serif; font-size:15px; line-height:1.3; padding:0 20px 24px; border-bottom:1px solid #3a352c; margin-bottom:12px; color:var(--paper);}
+  .nav-title span{display:block; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:.08em; color:#8f8a7c; margin-top:6px; text-transform:uppercase;}
+  .nav button{all:unset; cursor:pointer; padding:12px 20px; font-family:'IBM Plex Mono',monospace; font-size:11.5px; letter-spacing:.06em; text-transform:uppercase; color:#B5AF9F; border-left:3px solid transparent; transition:.15s;}
+  .nav button:hover{color:var(--paper); background:#2b271f;}
+  .nav button.active{color:var(--paper); border-left-color:var(--signal); background:#2b271f; font-weight:600;}
+
+  main{padding:40px 48px; max-width:1000px;}
+  @media (max-width:760px){ main{padding:24px 20px;} }
+  .panel{display:none;} .panel.active{display:block;}
+
+  [contenteditable]{cursor:text;}
+  [contenteditable]:hover{background:#00000006;}
+  [contenteditable]:focus{background:#fff; box-shadow:0 0 0 1px var(--line); outline:none;}
+
+  h1{font-family:'Fraunces',serif; font-size:30px; font-weight:600; margin:0 0 6px; padding:2px 4px;}
+  .lede{color:var(--ink-soft); font-size:14.5px; max-width:64ch; margin:0 0 28px; line-height:1.55; padding:2px 4px;}
+
+  /* --- Como usar --- */
+  .step{display:flex; gap:16px; margin-bottom:22px; align-items:flex-start;}
+  .step-tag{font-family:'IBM Plex Mono',monospace; font-size:11px; padding:4px 9px; border-radius:3px; white-space:nowrap; font-weight:600; margin-top:2px;}
+  .step p{margin:2px 0 0; font-size:14px; line-height:1.6; color:#33302A; padding:2px 4px;}
+  .criterion{margin-top:30px; padding:20px 22px; background:var(--card); border-left:3px solid var(--signal);}
+  .criterion h3{font-family:'Fraunces',serif; font-size:16px; margin:0 0 8px; color:var(--signal); padding:2px 4px;}
+  .criterion p{font-size:13.5px; line-height:1.65; margin:0 0 8px; color:#33302A; padding:2px 4px;}
+
+  /* --- Banco de Ideias --- */
+  .toolbar{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:22px;}
+  .pill{font-family:'IBM Plex Mono',monospace; font-size:11px; padding:6px 12px; border-radius:20px; border:1px solid var(--line); background:var(--card); cursor:pointer; text-transform:uppercase; letter-spacing:.04em;}
+  .pill.active{background:var(--ink); color:var(--paper); border-color:var(--ink);}
+
+  .add-form{background:var(--card); border:1px solid var(--line); padding:20px; margin-bottom:28px; display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .add-form input, .add-form select, .add-form textarea{font-family:'Inter',sans-serif; font-size:13px; padding:9px 10px; border:1px solid var(--line); background:#fff; color:var(--ink); width:100%;}
+  .add-form label{font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase; color:var(--ink-soft); display:block; margin-bottom:4px;}
+  .add-form .full{grid-column:1/-1;}
+  .add-form textarea{resize:vertical; min-height:44px;}
+  .add-btn{grid-column:1/-1; justify-self:start; margin-top:4px; all:unset; cursor:pointer; background:var(--signal); color:#fff; padding:10px 18px; font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:.05em; text-transform:uppercase;}
+  .add-btn:hover{opacity:.9;}
+
+  .cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(290px,1fr)); gap:16px;}
+  .card{background:var(--card); border:1px solid var(--line); position:relative; padding:16px 16px 14px;}
+  .card::before{content:""; position:absolute; top:0; left:0; right:0; height:5px;}
+  .card.eixo-Cinema::before{background:var(--cinema-fg);}
+  .card.eixo-Arquitetura::before{background:var(--arq-fg);}
+  .card.eixo-Arte::before{background:var(--arte-fg);}
+  .card.eixo-Cruzamento::before{background:var(--cruz-fg);}
+  .card-top{display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-top:4px;}
+  .card h4{font-family:'Fraunces',serif; font-size:16px; margin:0 0 8px; line-height:1.3; padding:2px 4px; flex:1;}
+  .badge-select{font-family:'IBM Plex Mono',monospace; font-size:9.5px; padding:3px 6px; border-radius:3px; text-transform:uppercase; font-weight:600; border:none; cursor:pointer;}
+  .card .field{font-size:12.5px; color:#33302A; margin:6px 0; line-height:1.5;}
+  .card .field b{font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:10px; text-transform:uppercase; color:var(--ink-soft); display:block; margin-bottom:2px;}
+  .card .field div[contenteditable]{padding:2px 4px; min-height:16px;}
+  .card-foot{display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding-top:10px; border-top:1px dashed var(--line); gap:8px;}
+  .foot-left{display:flex; gap:6px;}
+  .icon-btn{all:unset; cursor:pointer; font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.04em;}
+  .icon-btn:hover{color:var(--signal);}
+  .empty{color:var(--ink-soft); font-size:13.5px; padding:30px 0;}
+
+  /* --- Cruzamentos --- */
+  .cruz-cols{display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:20px;}
+  @media (max-width:760px){ .cruz-cols{grid-template-columns:1fr;} }
+  .cruz-col h5{font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; padding:8px 10px; margin:0 0 6px; color:#fff; display:flex; justify-content:space-between; align-items:center;}
+  .cruz-col.c-Cinema h5{background:var(--cinema-fg);} .cruz-col.c-Arquitetura h5{background:var(--arq-fg);} .cruz-col.c-Arte h5{background:var(--arte-fg);}
+  .cruz-col h5 button{all:unset; cursor:pointer; font-size:14px; line-height:1;}
+  .cruz-item{display:flex; align-items:center; gap:6px; font-size:12.5px; border-bottom:1px solid var(--paper-dim); background:var(--card);}
+  .cruz-item div[contenteditable]{flex:1; padding:8px 10px;}
+  .cruz-item .rm{all:unset; cursor:pointer; padding:0 10px; color:var(--ink-soft); font-size:13px;}
+  .cruz-item .rm:hover{color:var(--signal);}
+  .cruz-item.hit{outline:2px solid var(--signal); background:#fff;}
+  .roll-btn{all:unset; cursor:pointer; background:var(--ink); color:var(--paper); padding:11px 20px; font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:.05em; text-transform:uppercase; margin-bottom:16px;}
+  .roll-btn:hover{background:#2b271f;}
+  .result{background:var(--card); border-left:3px solid var(--signal); padding:16px 18px; font-size:13.5px; line-height:1.6; display:none;}
+  .result.show{display:block;}
+  .result b{font-family:'Fraunces',serif; font-size:15px; display:block; margin-bottom:4px;}
+
+  /* --- Fontes --- */
+  .src-table{width:100%; border-collapse:collapse; font-size:13px; margin-bottom:14px;}
+  .src-table th{text-align:left; font-family:'IBM Plex Mono',monospace; font-size:10.5px; text-transform:uppercase; color:var(--paper); background:var(--ink); padding:9px 12px; letter-spacing:.04em;}
+  .src-table td{padding:2px 4px; border-bottom:1px solid var(--paper-dim); vertical-align:top;}
+  .src-table td div[contenteditable]{padding:8px 10px;}
+  .src-table tr:nth-child(even) td{background:var(--card);}
+  .src-table .rm-row{all:unset; cursor:pointer; color:var(--ink-soft); font-size:14px; padding:0 10px;}
+  .src-table .rm-row:hover{color:var(--signal);}
+  .add-row-btn{all:unset; cursor:pointer; font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft); border:1px dashed var(--line); padding:8px 14px; text-transform:uppercase;}
+  .add-row-btn:hover{color:var(--signal); border-color:var(--signal);}
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="nav">
+    <div class="nav-title">Banco de Ideias<span>Cinema · Arte · Arquitetura</span></div>
+    <button data-panel="usar" class="active">Como usar</button>
+    <button data-panel="ideias">Banco de Ideias</button>
+    <button data-panel="cruz">Cruzamentos</button>
+    <button data-panel="fontes">Fontes</button>
+  </nav>
+
+  <main>
+    <!-- COMO USAR -->
+    <section class="panel active" id="usar">
+      <h1 contenteditable="true">Como usar este sistema</h1>
+      <p class="lede" contenteditable="true">Um fluxo de três etapas para capturar, cruzar e verificar ideias antes de virarem roteiro. Todo o texto desta página pode ser editado — clique em qualquer trecho.</p>
+
+      <div class="step">
+        <span class="step-tag" style="background:var(--arte-bg); color:var(--arte-fg);">Banco de Ideias</span>
+        <p contenteditable="true">Toda ideia nova entra aqui primeiro, mesmo crua. Preencha pelo menos título, eixo temático e o ângulo original — o resto pode ser completado depois.</p>
+      </div>
+      <div class="step">
+        <span class="step-tag" style="background:var(--cruz-bg); color:var(--cruz-fg);">Cruzamentos</span>
+        <p contenteditable="true">Ferramenta de brainstorm ativo: sorteie combinações entre cinema, arquitetura e arte para forçar teses que ainda não foram feitas.</p>
+      </div>
+      <div class="step">
+        <span class="step-tag" style="background:var(--cinema-bg); color:var(--cinema-fg);">Fontes</span>
+        <p contenteditable="true">Acervos, revistas e instituições para pesquisa de fontes primárias — e para evitar repetir o ângulo que a crítica de língua inglesa já fez.</p>
+      </div>
+
+      <div class="criterion">
+        <h3 contenteditable="true">Critério de originalidade</h3>
+        <p contenteditable="true">Antes de mover uma ideia para roteiro, pergunte: essa tese existe porque vi a obra de novo, ou porque vi um vídeo que já fez essa conexão? Se for a segunda, volte à fonte primária.</p>
+        <p contenteditable="true">Prioridade alta = cruza pelo menos dois eixos e tem fonte primária acessível (exposição em SP, filme disponível, acervo consultável).</p>
+      </div>
+    </section>
+
+    <!-- BANCO DE IDEIAS -->
+    <section class="panel" id="ideias">
+      <h1 contenteditable="true">Banco de Ideias</h1>
+      <p class="lede" contenteditable="true">Registre, filtre e organize suas ideias por eixo, status e prioridade. Clique em qualquer campo de um cartão para editar.</p>
+
+      <div class="toolbar" id="filterBar"></div>
+
+      <form class="add-form" id="addForm">
+        <div><label>Título provisório</label><input required id="f-title" placeholder="Ex: O concreto como personagem"></div>
+        <div><label>Eixo temático</label>
+          <select id="f-eixo"><option>Cinema</option><option>Arquitetura</option><option>Arte</option><option selected>Cruzamento</option></select>
+        </div>
+        <div class="full"><label>Obra(s) / Referência(s)</label><input id="f-obra" placeholder="Ex: Ilha das Flores; prédios de Niemeyer em Brasília"></div>
+        <div class="full"><label>Tese central</label><textarea id="f-tese" placeholder="Uma frase que resume o argumento"></textarea></div>
+        <div class="full"><label>Ângulo original</label><textarea id="f-angulo" placeholder="O que ainda não foi feito com esse recorte"></textarea></div>
+        <div><label>Fonte primária</label><input id="f-fonte" placeholder="Ex: Acervo IMS"></div>
+        <div><label>Status</label>
+          <select id="f-status"><option>Ideia</option><option>Pesquisa</option><option>Roteiro</option><option>Produção</option><option>Publicado</option></select>
+        </div>
+        <div><label>Prioridade</label>
+          <select id="f-prio"><option>Alta</option><option selected>Média</option><option>Baixa</option></select>
+        </div>
+        <button type="submit" class="add-btn">Adicionar ideia</button>
+      </form>
+
+      <div class="cards" id="cardGrid"></div>
+    </section>
+
+    <!-- CRUZAMENTOS -->
+    <section class="panel" id="cruz">
+      <h1 contenteditable="true">Cruzamentos</h1>
+      <p class="lede" contenteditable="true">Sorteie um item de cada coluna e pergunte: que tese nasce dessa combinação? Edite, adicione ou remova itens em qualquer coluna.</p>
+      <button class="roll-btn" id="rollBtn">Sortear cruzamento</button>
+      <div class="result" id="rollResult"></div>
+      <div class="cruz-cols" id="cruzCols"></div>
+    </section>
+
+    <!-- FONTES -->
+    <section class="panel" id="fontes">
+      <h1 contenteditable="true">Fontes e Instituições</h1>
+      <p class="lede" contenteditable="true">Acervos e publicações de referência para pesquisa de fontes primárias. Clique em qualquer célula para editar.</p>
+      <table class="src-table">
+        <thead><tr><th>Fonte</th><th>Tipo</th><th>Uso principal</th><th></th></tr></thead>
+        <tbody id="srcBody"></tbody>
+      </table>
+      <button class="add-row-btn" id="addSrcBtn">+ adicionar fonte</button>
+    </section>
+  </main>
+</div>
+
+<script>
+const EIXO_COLORS = {
+  Cinema:{bg:'var(--cinema-bg)',fg:'var(--cinema-fg)'},
+  Arquitetura:{bg:'var(--arq-bg)',fg:'var(--arq-fg)'},
+  Arte:{bg:'var(--arte-bg)',fg:'var(--arte-fg)'},
+  Cruzamento:{bg:'var(--cruz-bg)',fg:'var(--cruz-fg)'}
+};
+const STATUS_COLORS = {
+  Ideia:{bg:'#EEECE8',fg:'#6B7280'}, Pesquisa:{bg:'#FDF2D0',fg:'#946200'},
+  Roteiro:{bg:'#E0EAF7',fg:'#1D4E89'}, Produção:{bg:'#F3E4D4',fg:'#9A4D0A'}, Publicado:{bg:'#E1F0E3',fg:'#1E6B34'}
+};
+
+// nav
+document.querySelectorAll('.nav button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.panel).classList.add('active');
+  });
+});
+
+// --- Banco de Ideias state ---
+let ideas = [{
+  title:"O concreto como personagem — Niemeyer no cinema brasileiro dos anos 60",
+  eixo:"Cruzamento", obra:"Ilha das Flores (1989); prédios de Niemeyer em Brasília",
+  tese:"A arquitetura modernista brasileira é usada no cinema da época como crítica, não como celebração.",
+  angulo:"Ninguém cruzou crítica arquitetônica com análise de mise-en-scène nesse recorte específico.",
+  fonte:"Acervo IMS / visita a Brasília", status:"Pesquisa", prio:"Alta"
+}];
+let activeFilter = "Todos";
+
+function renderFilters(){
+  const bar = document.getElementById('filterBar');
+  bar.innerHTML = "";
+  ["Todos","Cinema","Arquitetura","Arte","Cruzamento"].forEach(f=>{
+    const p = document.createElement('button');
+    p.className = 'pill' + (activeFilter===f?' active':'');
+    p.textContent = f;
+    p.onclick = ()=>{ activeFilter=f; renderFilters(); renderCards(); };
+    bar.appendChild(p);
+  });
+}
+
+function eixoOptions(sel){
+  return ["Cinema","Arquitetura","Arte","Cruzamento"].map(o=>`<option ${o===sel?'selected':''}>${o}</option>`).join("");
+}
+function statusOptions(sel){
+  return ["Ideia","Pesquisa","Roteiro","Produção","Publicado"].map(o=>`<option ${o===sel?'selected':''}>${o}</option>`).join("");
+}
+function prioOptions(sel){
+  return ["Alta","Média","Baixa"].map(o=>`<option ${o===sel?'selected':''}>${o}</option>`).join("");
+}
+
+function renderCards(){
+  const grid = document.getElementById('cardGrid');
+  const indices = ideas.map((_,i)=>i).filter(i=> activeFilter==="Todos" || ideas[i].eixo===activeFilter);
+  if(indices.length===0){ grid.innerHTML = '<div class="empty">Nenhuma ideia neste filtro ainda.</div>'; return; }
+  grid.innerHTML = "";
+  indices.forEach(idx=>{
+    const idea = ideas[idx];
+    const eixoC = EIXO_COLORS[idea.eixo];
+    const statusC = STATUS_COLORS[idea.status] || {bg:'#eee',fg:'#555'};
+    const card = document.createElement('div');
+    card.className = 'card eixo-'+idea.eixo;
+    card.dataset.idx = idx;
+    card.innerHTML = `
+      <div class="card-top">
+        <h4 contenteditable="true" data-field="title">${idea.title}</h4>
+        <select class="badge-select f-eixo" style="background:${eixoC.bg};color:${eixoC.fg}">${eixoOptions(idea.eixo)}</select>
+      </div>
+      <div class="field"><b>Obra(s)</b><div contenteditable="true" data-field="obra">${idea.obra||""}</div></div>
+      <div class="field"><b>Tese</b><div contenteditable="true" data-field="tese">${idea.tese||""}</div></div>
+      <div class="field"><b>Ângulo original</b><div contenteditable="true" data-field="angulo">${idea.angulo||""}</div></div>
+      <div class="field"><b>Fonte primária</b><div contenteditable="true" data-field="fonte">${idea.fonte||""}</div></div>
+      <div class="card-foot">
+        <div class="foot-left">
+          <select class="badge-select f-status" style="background:${statusC.bg};color:${statusC.fg}">${statusOptions(idea.status)}</select>
+          <select class="badge-select f-prio" style="background:#EEEEEA;color:#555">${prioOptions(idea.prio)}</select>
+        </div>
+        <div class="foot-left">
+          <button class="icon-btn copy-btn">Copiar</button>
+          <button class="icon-btn del-btn">Excluir</button>
+        </div>
+      </div>`;
+    grid.appendChild(card);
+  });
+
+  grid.querySelectorAll('[contenteditable]').forEach(el=>{
+    el.addEventListener('input', ()=>{
+      const idx = el.closest('.card').dataset.idx;
+      ideas[idx][el.dataset.field] = el.textContent;
+    });
+  });
+  grid.querySelectorAll('.f-eixo').forEach(sel=>{
+    sel.addEventListener('change', ()=>{
+      const idx = sel.closest('.card').dataset.idx;
+      ideas[idx].eixo = sel.value;
+      renderCards();
+    });
+  });
+  grid.querySelectorAll('.f-status').forEach(sel=>{
+    sel.addEventListener('change', ()=>{
+      const idx = sel.closest('.card').dataset.idx;
+      ideas[idx].status = sel.value;
+      const c = STATUS_COLORS[sel.value];
+      sel.style.background = c.bg; sel.style.color = c.fg;
+    });
+  });
+  grid.querySelectorAll('.f-prio').forEach(sel=>{
+    sel.addEventListener('change', ()=>{
+      const idx = sel.closest('.card').dataset.idx;
+      ideas[idx].prio = sel.value;
+    });
+  });
+  grid.querySelectorAll('.del-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const idx = btn.closest('.card').dataset.idx;
+      ideas.splice(idx,1);
+      renderCards();
+    });
+  });
+  grid.querySelectorAll('.copy-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const idx = btn.closest('.card').dataset.idx;
+      const idea = ideas[idx];
+      const txt = `${idea.title}\nEixo: ${idea.eixo}\nObra(s): ${idea.obra}\nTese: ${idea.tese}\nÂngulo original: ${idea.angulo}\nFonte primária: ${idea.fonte}\nStatus: ${idea.status} | Prioridade: ${idea.prio}`;
+      navigator.clipboard?.writeText(txt);
+      btn.textContent = "Copiado";
+      setTimeout(()=>btn.textContent="Copiar",1200);
+    });
+  });
+}
+
+document.getElementById('addForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  ideas.unshift({
+    title: document.getElementById('f-title').value || "Sem título",
+    eixo: document.getElementById('f-eixo').value,
+    obra: document.getElementById('f-obra').value,
+    tese: document.getElementById('f-tese').value,
+    angulo: document.getElementById('f-angulo').value,
+    fonte: document.getElementById('f-fonte').value,
+    status: document.getElementById('f-status').value,
+    prio: document.getElementById('f-prio').value
+  });
+  e.target.reset();
+  document.getElementById('f-eixo').value = "Cruzamento";
+  document.getElementById('f-prio').value = "Média";
+  activeFilter = "Todos"; renderFilters(); renderCards();
+});
+
+renderFilters(); renderCards();
+
+// --- Cruzamentos ---
+let cruz = {
+  Cinema:["Nolan e a estrutura temporal não-linear","Cinema de Béla Tarr","Cidade em ruínas no cinema pós-guerra",
+    "Wong Kar-wai e o espaço interior","Tarkovsky e o tempo esculpido","Cinema marginal brasileiro (60-70)",
+    "Blockbuster de super-herói e identidade","Kubrick e a simetria arquitetônica","Cinema de vigilância (Haneke)","Kaiju e escala urbana"],
+  Arquitetura:["Brutalismo paulistano (Copan, FAU-USP)","Niemeyer e Brasília","Arquitetura hostil","Favela como arquitetura vernacular",
+    "Museus como objeto arquitetônico (MASP)","Arranha-céus e verticalização","Ruínas industriais recicladas",
+    "Casas modernistas (Lina Bo Bardi)","Arquitetura totalitária do séc. XX","Cidades planejadas (Brasília, Chandigarh)"],
+  Arte:["Neoconcretismo (Clark, Oiticica)","Fotografia urbana do IMS","Arte de rua e pichação em SP","Land art e escala do corpo",
+    "Retrato e identidade contemporânea","Tomie Ohtake e abstração geométrica","Arte cinética e movimento",
+    "Curadoria como narrativa (MASP)","Arte indígena contemporânea","Instalação e espaço expandido"]
+};
+function renderCruz(){
+  const wrap = document.getElementById('cruzCols');
+  wrap.innerHTML = "";
+  Object.keys(cruz).forEach(cat=>{
+    const col = document.createElement('div');
+    col.className = 'cruz-col c-'+cat;
+    col.innerHTML = `<h5>${cat}<button class="add-item" data-cat="${cat}">+</button></h5>` +
+      cruz[cat].map((item,i)=>`
+        <div class="cruz-item" data-cat="${cat}" data-i="${i}">
+          <div contenteditable="true">${item}</div>
+          <button class="rm">×</button>
+        </div>`).join("");
+    wrap.appendChild(col);
+  });
+  wrap.querySelectorAll('.cruz-item [contenteditable]').forEach(el=>{
+    el.addEventListener('input', ()=>{
+      const item = el.closest('.cruz-item');
+      cruz[item.dataset.cat][item.dataset.i] = el.textContent;
+    });
+  });
+  wrap.querySelectorAll('.cruz-item .rm').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const item = btn.closest('.cruz-item');
+      cruz[item.dataset.cat].splice(item.dataset.i,1);
+      renderCruz();
+    });
+  });
+  wrap.querySelectorAll('.add-item').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      cruz[btn.dataset.cat].push("Novo item — clique para editar");
+      renderCruz();
+    });
+  });
+}
+renderCruz();
+
+document.getElementById('rollBtn').addEventListener('click', ()=>{
+  document.querySelectorAll('.cruz-item').forEach(el=>el.classList.remove('hit'));
+  const picks = {};
+  Object.keys(cruz).forEach(cat=>{
+    if(cruz[cat].length===0) return;
+    const i = Math.floor(Math.random()*cruz[cat].length);
+    picks[cat] = cruz[cat][i];
+  });
+  document.querySelectorAll('.cruz-item').forEach(el=>{
+    const cat = el.dataset.cat;
+    if(el.querySelector('[contenteditable]').textContent === picks[cat]) el.classList.add('hit');
+  });
+  const res = document.getElementById('rollResult');
+  res.innerHTML = `<b>Cruzamento sorteado</b>${picks.Cinema||"—"} <br> ${picks.Arquitetura||"—"} <br> ${picks.Arte||"—"}<br><span style="color:var(--ink-soft); font-size:12px;">Que tese nasce daqui? Registre no Banco de Ideias se fizer sentido.</span>`;
+  res.classList.add('show');
+});
+
+// --- Fontes ---
+let sources = [
+  ["MUBI Notebook","Crítica / ensaio","Ensaios longos com ângulos autorais, cinema de autor"],
+  ["Senses of Cinema","Crítica / ensaio","Ensaios temáticos, movimentos regionais"],
+  ["Sight & Sound (BFI)","Revista","Enquetes, ensaios técnicos, referências fora do óbvio"],
+  ["Revista Cinética","Crítica nacional","Crítica brasileira séria, pouco citada em vídeo-ensaio"],
+  ["Contracampo","Crítica nacional","Crítica brasileira, análise autoral"],
+  ["Google Scholar","Acadêmico","Papers sobre diretores/filmes específicos"],
+  ["MASP","Instituição / acervo","Catálogos de exposição, textos curatoriais"],
+  ["Pinacoteca de São Paulo","Instituição / acervo","Catálogos, curadoria, arte brasileira"],
+  ["Instituto Tomie Ohtake","Instituição / acervo","Arte contemporânea, catálogos de exposição"],
+  ["Instituto Moreira Salles (IMS)","Acervo","Fotografia e cultura visual brasileira"],
+  ["Artforum","Revista","Vocabulário crítico de arte contemporânea"],
+  ["e-flux","Revista / plataforma","Crítica e teoria de arte contemporânea"],
+  ["Letterboxd","Comunidade / listas","Descobrir filmes menos óbvios para ancorar teses"]
+];
+function renderSources(){
+  const body = document.getElementById('srcBody');
+  body.innerHTML = sources.map((s,i)=>`
+    <tr data-i="${i}">
+      <td><div contenteditable="true" data-col="0">${s[0]}</div></td>
+      <td><div contenteditable="true" data-col="1">${s[1]}</div></td>
+      <td><div contenteditable="true" data-col="2">${s[2]}</div></td>
+      <td><button class="rm-row">×</button></td>
+    </tr>`).join("");
+  body.querySelectorAll('[contenteditable]').forEach(el=>{
+    el.addEventListener('input', ()=>{
+      const tr = el.closest('tr');
+      sources[tr.dataset.i][el.dataset.col] = el.textContent;
+    });
+  });
+  body.querySelectorAll('.rm-row').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const tr = btn.closest('tr');
+      sources.splice(tr.dataset.i,1);
+      renderSources();
+    });
+  });
+}
+renderSources();
+document.getElementById('addSrcBtn').addEventListener('click', ()=>{
+  sources.push(["Nova fonte","Tipo","Uso principal"]);
+  renderSources();
+});
+</script>
+</body>
+</html>
